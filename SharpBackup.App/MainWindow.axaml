@@ -2,8 +2,28 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" Width="600" Height="800" MinWidth="480" MinHeight="640"
         x:Class="SharpBackup.App.MainWindow"
-        Title="SharpBackup.App">
-    Welcome to Avalonia!
+        Title="SharpBackup">
+    <StackPanel HorizontalAlignment="Center">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="Add Folder" Click="OnAddFolderClick"/>
+            <Button Content="Add File" Click="OnAddFileClick"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+            <ListBox
+                Name="FolderListBox"
+                MaxWidth="290"
+            >
+            </ListBox>
+            <ListBox
+                Name="FileListBox"
+                MaxWidth="290"
+            >
+            </ListBox>
+        </StackPanel>
+
+        <Button Content="Start Backup" Click="OnBackupClick"/>
+
+    </StackPanel>
 </Window>
