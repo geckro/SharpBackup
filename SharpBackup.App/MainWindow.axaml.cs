@@ -18,8 +18,12 @@ public partial class MainWindow : Window
     private DirectoryInfo? _selectedFolderPath;
     private FileInfo? _selectedFilePath;
 
-    private readonly ListBox? _folderListBox;
-    private readonly ListBox? _fileListBox;
+    private DirectoryInfo? _selectedBackupPath;
+    private readonly TextBox? _backupPathBox;
+
+    private readonly ListBox? _folderListBox, _fileListBox;
+
+    private readonly Configuration _config = new();
 
     public MainWindow()
     {
@@ -27,8 +31,32 @@ public partial class MainWindow : Window
         _folderListBox = this.FindControl<ListBox>("FolderListBox");
         _fileListBox = this.FindControl<ListBox>("FileListBox");
 
+        _backupPathBox = this.FindControl<TextBox>("BackupLocationOption");
+
         ScrollViewer.SetHorizontalScrollBarVisibility(_folderListBox!, ScrollBarVisibility.Auto);
         ScrollViewer.SetHorizontalScrollBarVisibility(_fileListBox!, ScrollBarVisibility.Auto);
+
+        ApplyConfigurations();
+    }
+
+    private void ApplyConfigurations()
+    {
+        string? backupPath = _config.GetConfigValue<string>("backup", "backupFolder");
+        _backupPathBox!.Text = backupPath ?? @"C:\Backup";
+
+        string[] folderPaths = _config.GetConfigValue<string[]>("paths", "folderList") ?? [];
+        foreach (string path in folderPaths)
+        {
+            _folderList.Add(new DirectoryInfo(path));
+        }
+        UpdateListBox(_folderListBox, _folderList);
+
+        string[] filePaths = _config.GetConfigValue<string[]>("paths", "fileList") ?? [];
+        foreach (var path in filePaths)
+        {
+            _fileList.Add(new FileInfo(path));
+        }
+        UpdateListBox(_fileListBox, _fileList);
     }
 
     private async void OnAddFolderClick(object sender, RoutedEventArgs e)
@@ -44,7 +72,8 @@ public partial class MainWindow : Window
             _selectedFolderPath = new DirectoryInfo(folderResult[0].Path.LocalPath);
             AddPathToList(_folderList, _selectedFolderPath);
             UpdateListBox(_folderListBox, _folderList);
-            // Console.WriteLine(string.Join(", ", _folderList));
+
+            _config.SaveToConfigFile("paths", "folderList", _folderList.ToArray());
         }
         else
         {
@@ -65,11 +94,31 @@ public partial class MainWindow : Window
             _selectedFilePath = new FileInfo(fileResult[0].Path.LocalPath);
             AddPathToList(_fileList, _selectedFilePath);
             UpdateListBox(_fileListBox, _fileList);
-            // Console.WriteLine(string.Join(", ", _fileList));
         }
         else
         {
             _selectedFilePath = null;
+        }
+    }
+
+    private async void SelectBackupLocation(object? sender, RoutedEventArgs e)
+    {
+        IReadOnlyList<IStorageFolder> backupFolder = await StorageProvider.OpenFolderPickerAsync(
+            new FolderPickerOpenOptions
+            {
+                Title = "Select Backup Folder"
+            });
+
+        if (backupFolder.Count > 0)
+        {
+            _selectedBackupPath = new DirectoryInfo(backupFolder[0].Path.LocalPath);
+            WindowHelpers.UpdateTextBox(_backupPathBox, _selectedBackupPath.ToString());
+
+            _config.SaveToConfigFile("backup", "backupFolder", _selectedBackupPath.ToString());
+        }
+        else
+        {
+            _selectedFolderPath = null;
         }
     }
 
@@ -110,7 +159,6 @@ public partial class MainWindow : Window
         {
             Console.WriteLine("Error during backup: " + exc.Message);
         }
-
     }
     private static void CopyDirectoryContents(DirectoryInfo sourceDir, string targetDir)
     {

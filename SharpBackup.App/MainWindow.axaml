@@ -7,23 +7,30 @@
         Title="SharpBackup">
     <StackPanel HorizontalAlignment="Center">
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Content="Add Folder" Click="OnAddFolderClick"/>
-            <Button Content="Add File" Click="OnAddFileClick"/>
+            <Button Content="Add Folder" Click="OnAddFolderClick" Margin="10, 5"/>
+            <Button Content="Add File" Click="OnAddFileClick" Margin="10, 5"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal">
-            <ListBox
-                Name="FolderListBox"
-                MaxWidth="290"
-            >
-            </ListBox>
-            <ListBox
-                Name="FileListBox"
-                MaxWidth="290"
-            >
-            </ListBox>
+            <StackPanel Orientation="Vertical" MinWidth="200">
+                <Label Content="Folder Locations" HorizontalAlignment="Center"></Label>
+                <ListBox Name="FolderListBox" MaxWidth="290"></ListBox>
+            </StackPanel>
+            <StackPanel Orientation="Vertical" MinWidth="200">
+                <Label Content="File Locations" HorizontalAlignment="Center"></Label>
+                <ListBox Name="FileListBox" MaxWidth="290"></ListBox>
+            </StackPanel>
+
+        </StackPanel>
+        <StackPanel>
+            <Label Content="Options" FontWeight="Bold"/>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Backup location"></Label>
+                <TextBox Name="BackupLocationOption" IsReadOnly="True"></TextBox>
+                <Button Content="Select Backup Location" Click="SelectBackupLocation"/>
+            </StackPanel>
         </StackPanel>
 
-        <Button Content="Start Backup" Click="OnBackupClick"/>
+        <Button Content="Start Backup" Click="OnBackupClick" HorizontalAlignment="Center" Margin="0, 10"/>
 
     </StackPanel>
 </Window>
