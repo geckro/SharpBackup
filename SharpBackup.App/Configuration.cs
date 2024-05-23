@@ -12,7 +12,7 @@ public class Configuration
     {
         try
         {
-            XmlDocument xmlDoc = new XmlDocument();
+            var xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("Configuration");
             xmlDoc.AppendChild(root);
 
@@ -35,7 +35,7 @@ public class Configuration
                 return default;
             }
 
-            XmlDocument xmlDoc = new XmlDocument();
+            var xmlDoc = new XmlDocument();
             xmlDoc.Load(_configFilePath.FullName);
 
             XmlNode? configNode = xmlDoc.SelectSingleNode($"/Configuration/{xmlCategory}/{xmlKey}");
@@ -67,39 +67,28 @@ public class Configuration
     {
         try
         {
-            XmlDocument xmlDoc = new XmlDocument();
+            var xmlDoc = new XmlDocument();
 
             if (!File.Exists(_configFilePath.FullName))
             {
                 CreateConfigFile();
+                xmlDoc.Load(_configFilePath.FullName);
             }
             else
             {
                 xmlDoc.Load(_configFilePath.FullName);
             }
 
-            XmlElement? root = xmlDoc.DocumentElement;
-            if (root == null)
-            {
-                root = xmlDoc.CreateElement("Configuration");
-                xmlDoc.AppendChild(root);
-            }
+            var root = xmlDoc.DocumentElement ?? xmlDoc.AppendChild(xmlDoc.CreateElement("Configuration"));
+            var configNode = root?.SelectSingleNode(xmlCategory) ?? root.AppendChild(xmlDoc.CreateElement(xmlCategory));
 
-            XmlNode? configNode = root.SelectSingleNode(xmlCategory);
-            if (configNode == null)
-            {
-                configNode = xmlDoc.CreateElement(xmlCategory);
-                root.AppendChild(configNode);
-            }
-
-            XmlNode? existingKeyNode = configNode.SelectSingleNode(xmlKey);
+            var existingKeyNode = configNode?.SelectSingleNode(xmlKey);
             if (existingKeyNode != null)
             {
-                configNode.RemoveChild(existingKeyNode);
+                configNode?.RemoveChild(existingKeyNode);
             }
 
-            XmlElement keyElement = xmlDoc.CreateElement(xmlKey);
-
+            var keyElement = xmlDoc.CreateElement(xmlKey);
             if (value is string stringValue)
             {
                 keyElement.InnerText = stringValue;
@@ -109,8 +98,7 @@ public class Configuration
                 keyElement.InnerText = string.Join(";", arrayValue);
             }
 
-            configNode.AppendChild(keyElement);
-
+            configNode?.AppendChild(keyElement);
             xmlDoc.Save(_configFilePath.FullName);
 
             Console.WriteLine($"Value '{value}' saved to {_configFilePath} under category '{xmlCategory}' with key '{xmlKey}'");

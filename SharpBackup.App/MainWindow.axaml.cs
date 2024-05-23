@@ -30,28 +30,26 @@ public partial class MainWindow : Window
         InitializeComponent();
         _folderListBox = this.FindControl<ListBox>("FolderListBox");
         _fileListBox = this.FindControl<ListBox>("FileListBox");
-
         _backupPathBox = this.FindControl<TextBox>("BackupLocationOption");
 
-        ScrollViewer.SetHorizontalScrollBarVisibility(_folderListBox!, ScrollBarVisibility.Auto);
-        ScrollViewer.SetHorizontalScrollBarVisibility(_fileListBox!, ScrollBarVisibility.Auto);
+        if (_folderListBox != null) ScrollViewer.SetHorizontalScrollBarVisibility(_folderListBox, ScrollBarVisibility.Auto);
+        if (_fileListBox != null) ScrollViewer.SetHorizontalScrollBarVisibility(_fileListBox, ScrollBarVisibility.Auto);
 
         ApplyConfigurations();
     }
 
     private void ApplyConfigurations()
     {
-        string? backupPath = _config.GetConfigValue<string>("backup", "backupFolder");
-        _backupPathBox!.Text = backupPath ?? @"C:\Backup";
+        _backupPathBox!.Text = _config.GetConfigValue<string>("backup", "backupFolder") ?? @"C:\Backup";
 
-        string[] folderPaths = _config.GetConfigValue<string[]>("paths", "folderList") ?? [];
-        foreach (string path in folderPaths)
+        var folderPaths = _config.GetConfigValue<string[]>("paths", "folderList") ?? [];
+        foreach (var path in folderPaths)
         {
             _folderList.Add(new DirectoryInfo(path));
         }
         UpdateListBox(_folderListBox, _folderList);
 
-        string[] filePaths = _config.GetConfigValue<string[]>("paths", "fileList") ?? [];
+        var filePaths = _config.GetConfigValue<string[]>("paths", "fileList") ?? [];
         foreach (var path in filePaths)
         {
             _fileList.Add(new FileInfo(path));
@@ -72,7 +70,6 @@ public partial class MainWindow : Window
             _selectedFolderPath = new DirectoryInfo(folderResult[0].Path.LocalPath);
             AddPathToList(_folderList, _selectedFolderPath);
             UpdateListBox(_folderListBox, _folderList);
-
             _config.SaveToConfigFile("paths", "folderList", _folderList.ToArray());
         }
         else
@@ -94,6 +91,7 @@ public partial class MainWindow : Window
             _selectedFilePath = new FileInfo(fileResult[0].Path.LocalPath);
             AddPathToList(_fileList, _selectedFilePath);
             UpdateListBox(_fileListBox, _fileList);
+            _config.SaveToConfigFile("paths", "fileList", _fileList.ToArray());
         }
         else
         {
@@ -112,9 +110,8 @@ public partial class MainWindow : Window
         if (backupFolder.Count > 0)
         {
             _selectedBackupPath = new DirectoryInfo(backupFolder[0].Path.LocalPath);
-            WindowHelpers.UpdateTextBox(_backupPathBox, _selectedBackupPath.ToString());
-
-            _config.SaveToConfigFile("backup", "backupFolder", _selectedBackupPath.ToString());
+            WindowHelpers.UpdateTextBox(_backupPathBox, _selectedBackupPath.FullName);
+            _config.SaveToConfigFile("backup", "backupFolder", _selectedBackupPath.FullName);
         }
         else
         {
@@ -124,7 +121,7 @@ public partial class MainWindow : Window
 
     private void OnBackupClick(object sender, RoutedEventArgs e)
     {
-        DirectoryInfo backupDirectory = new DirectoryInfo(@"D:\Backup\SharpBK");
+        var backupDirectory = new DirectoryInfo(_config.GetConfigValue<string>("backup", "backupFolder") ?? @"C:\Backup");
 
         if (!backupDirectory.Exists)
         {
@@ -135,24 +132,24 @@ public partial class MainWindow : Window
         {
             foreach (var folder in _folderList)
             {
-                string? destinationFolderPath = Path.Combine(backupDirectory.FullName, folder.Name);
-
+                var destinationFolderPath = Path.Combine(backupDirectory.FullName, folder.Name);
                 if (!Directory.Exists(destinationFolderPath))
                 {
                     Directory.CreateDirectory(destinationFolderPath);
                 }
-
                 CopyDirectoryContents(folder, destinationFolderPath);
             }
 
             foreach (var file in _fileList)
             {
-                string? destinationFilePath = Path.Combine(backupDirectory.FullName, file.Name);
+                var destinationFilePath = Path.Combine(backupDirectory.FullName, file.Name);
                 file.CopyTo(destinationFilePath, true);
             }
 
-            var infoWindow = new InfoWindow();
-            infoWindow.InfoText = "Backup completed with no errors.";
+            var infoWindow = new InfoWindow
+            {
+                InfoText = "Backup completed with no errors."
+            };
             infoWindow.Show();
         }
         catch (Exception exc)
@@ -160,21 +157,22 @@ public partial class MainWindow : Window
             Console.WriteLine("Error during backup: " + exc.Message);
         }
     }
+
     private static void CopyDirectoryContents(DirectoryInfo sourceDir, string targetDir)
     {
         if (!sourceDir.Exists)
         {
             throw new DirectoryNotFoundException("Source directory does not exist or could not be found: " + sourceDir);
         }
+
         if (!Directory.Exists(targetDir))
         {
             Directory.CreateDirectory(targetDir);
         }
 
-        FileInfo[] files = sourceDir.GetFiles();
-        foreach (FileInfo file in files)
+        foreach (var file in sourceDir.GetFiles())
         {
-            string tempPath = Path.Combine(targetDir, file.Name);
+            var tempPath = Path.Combine(targetDir, file.Name);
             if (!File.Exists(tempPath))
             {
                 file.CopyTo(tempPath, false);
@@ -199,13 +197,13 @@ public partial class MainWindow : Window
             }
         }
 
-        DirectoryInfo[] dirs = sourceDir.GetDirectories();
-        foreach (DirectoryInfo subDir in dirs)
+        foreach (var subDir in sourceDir.GetDirectories())
         {
-            string tempPath = Path.Combine(targetDir, subDir.Name);
+            var tempPath = Path.Combine(targetDir, subDir.Name);
             CopyDirectoryContents(subDir, tempPath);
         }
     }
+
     private static bool ByteArraysAreEqual(byte[] array1, byte[] array2)
     {
         if (array1.Length != array2.Length)
@@ -213,27 +211,27 @@ public partial class MainWindow : Window
 
         return !array1.Where((t, i) => t != array2[i]).Any();
     }
+
     private static void RenameFile(string filePath)
     {
-        string fileName = Path.GetFileNameWithoutExtension(filePath);
-        string fileExtension = Path.GetExtension(filePath);
-        string directory = Path.GetDirectoryName(filePath)!;
+        var fileName = Path.GetFileNameWithoutExtension(filePath);
+        var fileExtension = Path.GetExtension(filePath);
+        var directory = Path.GetDirectoryName(filePath)!;
 
-        string newFileName = $"{fileName}_{DateTime.Now:yyyy-MM-dd_HH-mm}{fileExtension}";
-        string newFilePath = Path.Combine(directory, newFileName);
+        var newFileName = $"{fileName}_{DateTime.Now:yyyy-MM-dd_HH-mm}{fileExtension}";
+        var newFilePath = Path.Combine(directory, newFileName);
 
         File.Move(filePath, newFilePath);
         Console.WriteLine($"File '{Path.GetFileName(filePath)}' renamed to '{Path.GetFileName(newFilePath)}'.");
     }
-    private void UpdateListBox<T>(ListBox? listBox, List<T> list)
+
+    private static void UpdateListBox<T>(ListBox? listBox, List<T> list)
     {
-        if (listBox != null)
+        if (listBox == null) return;
+        listBox.Items.Clear();
+        foreach (var item in list)
         {
-            listBox.Items.Clear();
-            foreach (var item in list)
-            {
-                listBox.Items.Add(item);
-            }
+            listBox.Items.Add(item);
         }
     }
 
