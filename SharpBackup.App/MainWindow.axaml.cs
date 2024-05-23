@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
@@ -12,8 +13,8 @@ namespace SharpBackup.App;
 
 public partial class MainWindow : Window
 {
-    private readonly List<DirectoryInfo> _folderList = [];
-    private readonly List<FileInfo> _fileList = [];
+    private readonly HashSet<DirectoryInfo> _folderList = [];
+    private readonly HashSet<FileInfo> _fileList = [];
 
     private DirectoryInfo? _selectedFolderPath;
     private FileInfo? _selectedFilePath;
@@ -68,7 +69,7 @@ public partial class MainWindow : Window
         if (folderResult.Count > 0)
         {
             _selectedFolderPath = new DirectoryInfo(folderResult[0].Path.LocalPath);
-            AddPathToList(_folderList, _selectedFolderPath);
+            _folderList.Add(_selectedFolderPath);
             WindowHelpers.UpdateListBox(_folderListBox, _folderList);
             _config.SaveToConfigFile("paths", "folderList", _folderList.ToArray());
         }
@@ -89,7 +90,7 @@ public partial class MainWindow : Window
         if (fileResult.Count > 0)
         {
             _selectedFilePath = new FileInfo(fileResult[0].Path.LocalPath);
-            AddPathToList(_fileList, _selectedFilePath);
+            _fileList.Add(_selectedFilePath);
             WindowHelpers.UpdateListBox(_fileListBox, _fileList);
             _config.SaveToConfigFile("paths", "fileList", _fileList.ToArray());
         }
@@ -155,14 +156,6 @@ public partial class MainWindow : Window
         catch (Exception exc)
         {
             Console.WriteLine("Error during backup: " + exc.Message);
-        }
-    }
-
-    private static void AddPathToList<T>(List<T> list, T path)
-    {
-        if (path != null && !list.Contains(path))
-        {
-            list.Add(path);
         }
     }
 }
