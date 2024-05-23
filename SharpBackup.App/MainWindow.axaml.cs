@@ -27,6 +27,16 @@ public partial class MainWindow : Window
 
     private readonly Configuration _config = new();
 
+    private static readonly string Platform = PlatformUtils.GetPlatform();
+
+    private readonly string _defaultBackupPaths = Platform switch
+    {
+        "windows" => @"C:\Backups",
+        "macos" => $"/Users/{Environment.UserName}/Backups",
+        "linux" => $"/home/{Environment.UserName}/Backups",
+        _ => ""
+    };
+
     public MainWindow()
     {
         InitializeComponent();
@@ -44,7 +54,7 @@ public partial class MainWindow : Window
 
     private void ApplyConfigurations()
     {
-        _backupPathBox!.Text = _config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup";
+        _backupPathBox!.Text = _config.GetConfigValueString("backup", "backupFolder") ?? _defaultBackupPaths;
 
         string[] folderPaths = _config.GetConfigValueRange("paths", "folderList") ?? [];
         foreach (string path in folderPaths)
@@ -127,7 +137,7 @@ public partial class MainWindow : Window
 
     private void OnBackupClick(object sender, RoutedEventArgs e)
     {
-        DirectoryInfo backupDirectory = new(_config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup");
+        DirectoryInfo backupDirectory = new(_config.GetConfigValueString("backup", "backupFolder") ?? _defaultBackupPaths);
 
         if (!backupDirectory.Exists)
         {
