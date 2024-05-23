@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
@@ -12,8 +13,8 @@ namespace SharpBackup.App;
 
 public partial class MainWindow : Window
 {
-    private readonly List<DirectoryInfo> _folderList = [];
-    private readonly List<FileInfo> _fileList = [];
+    private readonly HashSet<DirectoryInfo> _folderList = [];
+    private readonly HashSet<FileInfo> _fileList = [];
 
     private DirectoryInfo? _selectedFolderPath;
     private FileInfo? _selectedFilePath;
@@ -40,17 +41,17 @@ public partial class MainWindow : Window
 
     private void ApplyConfigurations()
     {
-        _backupPathBox!.Text = _config.GetConfigValue<string>("backup", "backupFolder") ?? @"C:\Backup";
+        _backupPathBox!.Text = _config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup";
 
-        var folderPaths = _config.GetConfigValue<string[]>("paths", "folderList") ?? [];
-        foreach (var path in folderPaths)
+        string[] folderPaths = _config.GetConfigValueRange("paths", "folderList") ?? [];
+        foreach (string path in folderPaths)
         {
             _folderList.Add(new DirectoryInfo(path));
         }
         WindowHelpers.UpdateListBox(_folderListBox, _folderList);
 
-        var filePaths = _config.GetConfigValue<string[]>("paths", "fileList") ?? [];
-        foreach (var path in filePaths)
+        string[] filePaths = _config.GetConfigValueRange("paths", "fileList") ?? [];
+        foreach (string path in filePaths)
         {
             _fileList.Add(new FileInfo(path));
         }
@@ -68,7 +69,7 @@ public partial class MainWindow : Window
         if (folderResult.Count > 0)
         {
             _selectedFolderPath = new DirectoryInfo(folderResult[0].Path.LocalPath);
-            AddPathToList(_folderList, _selectedFolderPath);
+            _folderList.Add(_selectedFolderPath);
             WindowHelpers.UpdateListBox(_folderListBox, _folderList);
             _config.SaveToConfigFile("paths", "folderList", _folderList.ToArray());
         }
@@ -89,7 +90,7 @@ public partial class MainWindow : Window
         if (fileResult.Count > 0)
         {
             _selectedFilePath = new FileInfo(fileResult[0].Path.LocalPath);
-            AddPathToList(_fileList, _selectedFilePath);
+            _fileList.Add(_selectedFilePath);
             WindowHelpers.UpdateListBox(_fileListBox, _fileList);
             _config.SaveToConfigFile("paths", "fileList", _fileList.ToArray());
         }
@@ -121,7 +122,7 @@ public partial class MainWindow : Window
 
     private void OnBackupClick(object sender, RoutedEventArgs e)
     {
-        var backupDirectory = new DirectoryInfo(_config.GetConfigValue<string>("backup", "backupFolder") ?? @"C:\Backup");
+        DirectoryInfo backupDirectory = new(_config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup");
 
         if (!backupDirectory.Exists)
         {
@@ -132,7 +133,7 @@ public partial class MainWindow : Window
         {
             foreach (var folder in _folderList)
             {
-                var destinationFolderPath = Path.Combine(backupDirectory.FullName, folder.Name);
+                string destinationFolderPath = Path.Combine(backupDirectory.FullName, folder.Name);
                 if (!Directory.Exists(destinationFolderPath))
                 {
                     Directory.CreateDirectory(destinationFolderPath);
@@ -140,13 +141,13 @@ public partial class MainWindow : Window
                 FileUtils.CopyDirectoryContents(folder, destinationFolderPath);
             }
 
-            foreach (var file in _fileList)
+            foreach (FileInfo file in _fileList)
             {
-                var destinationFilePath = Path.Combine(backupDirectory.FullName, file.Name);
+                string destinationFilePath = Path.Combine(backupDirectory.FullName, file.Name);
                 file.CopyTo(destinationFilePath, true);
             }
 
-            var infoWindow = new InfoWindow
+            InfoWindow infoWindow = new()
             {
                 InfoText = "Backup completed with no errors."
             };
@@ -155,14 +156,6 @@ public partial class MainWindow : Window
         catch (Exception exc)
         {
             Console.WriteLine("Error during backup: " + exc.Message);
-        }
-    }
-
-    private static void AddPathToList<T>(List<T> list, T path)
-    {
-        if (path != null && !list.Contains(path))
-        {
-            list.Add(path);
         }
     }
 }

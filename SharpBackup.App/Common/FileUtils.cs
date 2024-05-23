@@ -8,12 +8,12 @@ public static class FileUtils
 {
     private static void RenameFile(string filePath)
     {
-        var fileName = Path.GetFileNameWithoutExtension(filePath);
-        var fileExtension = Path.GetExtension(filePath);
-        var directory = Path.GetDirectoryName(filePath)!;
+        string fileName = Path.GetFileNameWithoutExtension(filePath);
+        string fileExtension = Path.GetExtension(filePath);
+        string directory = Path.GetDirectoryName(filePath)!;
 
-        var newFileName = $"{fileName}_{DateTime.Now:yyyy-MM-dd_HH-mm}{fileExtension}";
-        var newFilePath = Path.Combine(directory, newFileName);
+        string newFileName = $"{fileName}_{DateTime.Now:yyyy-MM-dd_HH-mm}{fileExtension}";
+        string newFilePath = Path.Combine(directory, newFileName);
 
         File.Move(filePath, newFilePath);
         Console.WriteLine($"File '{Path.GetFileName(filePath)}' renamed to '{Path.GetFileName(newFilePath)}'.");
@@ -31,9 +31,9 @@ public static class FileUtils
             Directory.CreateDirectory(targetDir);
         }
 
-        foreach (var file in sourceDir.GetFiles())
+        foreach (FileInfo file in sourceDir.GetFiles())
         {
-            var tempPath = Path.Combine(targetDir, file.Name);
+            string tempPath = Path.Combine(targetDir, file.Name);
             if (!File.Exists(tempPath))
             {
                 file.CopyTo(tempPath, false);
@@ -41,8 +41,8 @@ public static class FileUtils
             }
             else
             {
-                var sourceBytes = File.ReadAllBytes(file.FullName);
-                var destinationBytes = File.ReadAllBytes(tempPath);
+                byte[] sourceBytes = File.ReadAllBytes(file.FullName);
+                byte[] destinationBytes = File.ReadAllBytes(tempPath);
 
                 if (ByteArraysAreEqual(sourceBytes, destinationBytes))
                 {
@@ -58,9 +58,9 @@ public static class FileUtils
             }
         }
 
-        foreach (var subDir in sourceDir.GetDirectories())
+        foreach (DirectoryInfo subDir in sourceDir.GetDirectories())
         {
-            var tempPath = Path.Combine(targetDir, subDir.Name);
+            string tempPath = Path.Combine(targetDir, subDir.Name);
             CopyDirectoryContents(subDir, tempPath);
         }
     }

@@ -12,7 +12,7 @@ public static class WindowHelpers
             textBox.Text = text;
         }
     }
-    public static void UpdateListBox<T>(ListBox? listBox, List<T> list)
+    public static void UpdateListBox<T>(ListBox? listBox, IReadOnlyCollection<T> list)
     {
         if (listBox == null) return;
         listBox.Items.Clear();
