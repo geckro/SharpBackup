@@ -51,7 +51,7 @@ public class Configuration
 
             if (typeof(T) == typeof(string[]))
             {
-                return (T)(object)configNode.InnerText.Split(';');
+                return (T)(object)configNode.InnerText.Split(';', options: StringSplitOptions.RemoveEmptyEntries);
             }
 
             throw new InvalidOperationException($"Unsupported type: {typeof(T)}");
