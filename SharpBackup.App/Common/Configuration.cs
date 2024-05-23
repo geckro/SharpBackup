@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 
 namespace SharpBackup.App.Common;
@@ -26,7 +28,7 @@ public class Configuration
         }
     }
 
-    public XmlNode? GetConfigValue(string xmlCategory, string xmlKey)
+    private XmlNode? GetConfigValue(string xmlCategory, string xmlKey)
     {
         try
         {
@@ -79,26 +81,31 @@ public class Configuration
                 xmlDoc.Load(_configFilePath.FullName);
             }
 
-            XmlNode? root = xmlDoc.DocumentElement ?? xmlDoc.AppendChild(xmlDoc.CreateElement("Configuration"));
-            XmlNode? configNode = root?.SelectSingleNode(xmlCategory) ?? root!.AppendChild(xmlDoc.CreateElement(xmlCategory));
-
-            XmlNode? existingKeyNode = configNode?.SelectSingleNode(xmlKey);
-            if (existingKeyNode != null)
+            XmlNode? root = xmlDoc.DocumentElement;
+            XmlNode? categoryNode = root?.SelectSingleNode(xmlCategory);
+            if (categoryNode == null)
             {
-                configNode?.RemoveChild(existingKeyNode);
+                categoryNode = xmlDoc.CreateElement(xmlCategory);
+                root?.AppendChild(categoryNode);
             }
 
-            XmlElement keyElement = xmlDoc.CreateElement(xmlKey);
-            if (value is string stringValue)
+            XmlNode? keyNode = categoryNode.SelectSingleNode(xmlKey);
+            if (keyNode == null)
             {
-                keyElement.InnerText = stringValue;
-            }
-            else if (value is string[] arrayValue)
-            {
-                keyElement.InnerText = string.Join(";", arrayValue);
+                keyNode = xmlDoc.CreateElement(xmlKey);
+                categoryNode.AppendChild(keyNode);
             }
 
-            configNode?.AppendChild(keyElement);
+            keyNode.InnerText = value switch
+            {
+                string stringValue => stringValue,
+                string[] arrayValue => string.Join(";", arrayValue),
+                IEnumerable<DirectoryInfo> directoryArray => string.Join(";",
+                    directoryArray.Select(dir => dir.FullName)),
+                IEnumerable<FileInfo> fileArray => string.Join(";", fileArray.Select(file => file.FullName)),
+                _ => keyNode.InnerText
+            };
+
             xmlDoc.Save(_configFilePath.FullName);
 
             Console.WriteLine($"Value '{value}' saved to {_configFilePath} under category '{xmlCategory}' with key '{xmlKey}'");

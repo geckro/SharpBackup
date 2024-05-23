@@ -28,8 +28,10 @@
                 <TextBox Name="BackupLocationOption" IsReadOnly="True"></TextBox>
                 <Button Content="Select Backup Location" Click="SelectBackupLocation"/>
             </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Cleanup Backup Folders" Click="CleanupBackupFolders"/>
+            </StackPanel>
         </StackPanel>
-
         <Button Content="Start Backup" Click="OnBackupClick" HorizontalAlignment="Center" Margin="0, 10"/>
 
     </StackPanel>

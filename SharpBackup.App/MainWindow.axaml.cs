@@ -135,6 +135,46 @@ public partial class MainWindow : Window
         }
     }
 
+    private void CleanupBackupFolders(object sender, RoutedEventArgs e)
+    {
+        string?[] folderPaths = _config.GetConfigValueRange("paths", "folderList") ?? [];
+
+        Console.WriteLine("Initial folder paths: " + string.Join(", ", folderPaths));
+
+        if (folderPaths.Length == 0)
+        {
+            return;
+        }
+
+        folderPaths = folderPaths.OrderBy(paths => paths!.Length).ToArray();
+
+        Console.WriteLine("Ordered folder paths: " + string.Join(", ", folderPaths));
+
+        List<string?> removedLines = [];
+
+        for (int currentIndex = 0; currentIndex < folderPaths.Length; currentIndex++)
+        {
+            for (int compareIndex = currentIndex + 1; compareIndex < folderPaths.Length; compareIndex++)
+            {
+                if (folderPaths[currentIndex] != null && folderPaths[compareIndex] != null &&
+                    folderPaths[compareIndex]!.StartsWith(folderPaths[currentIndex]!, StringComparison.OrdinalIgnoreCase))
+                {
+                    removedLines.Add(folderPaths[compareIndex]);
+                    folderPaths[compareIndex] = null;
+                }
+            }
+        }
+        Console.WriteLine("Folder paths after cleanup: " + string.Join(", ", folderPaths));
+        Console.WriteLine("Removed lines: " + string.Join(", ", removedLines));
+
+        folderPaths = folderPaths.Where(p => p != null).ToArray();
+
+        _config.SaveToConfigFile("paths", "folderList", folderPaths);
+
+        string[] folderPathsNew = _config.GetConfigValueRange("paths", "folderList") ?? [];
+        WindowHelpers.UpdateListBox(_folderListBox, folderPathsNew);
+    }
+
     private void OnBackupClick(object sender, RoutedEventArgs e)
     {
         DirectoryInfo backupDirectory = new(_config.GetConfigValueString("backup", "backupFolder") ?? _defaultBackupPaths);
@@ -146,7 +186,7 @@ public partial class MainWindow : Window
 
         try
         {
-            foreach (var folder in _folderList)
+            foreach (DirectoryInfo folder in _folderList)
             {
                 string destinationFolderPath = Path.Combine(backupDirectory.FullName, folder.Name);
                 if (!Directory.Exists(destinationFolderPath))
