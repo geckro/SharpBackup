@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using SharpBackup.App.Common;
 using SharpBackup.App.Windows;
 
 namespace SharpBackup.App;
@@ -47,14 +47,14 @@ public partial class MainWindow : Window
         {
             _folderList.Add(new DirectoryInfo(path));
         }
-        UpdateListBox(_folderListBox, _folderList);
+        WindowHelpers.UpdateListBox(_folderListBox, _folderList);
 
         var filePaths = _config.GetConfigValue<string[]>("paths", "fileList") ?? [];
         foreach (var path in filePaths)
         {
             _fileList.Add(new FileInfo(path));
         }
-        UpdateListBox(_fileListBox, _fileList);
+        WindowHelpers.UpdateListBox(_fileListBox, _fileList);
     }
 
     private async void OnAddFolderClick(object sender, RoutedEventArgs e)
@@ -69,7 +69,7 @@ public partial class MainWindow : Window
         {
             _selectedFolderPath = new DirectoryInfo(folderResult[0].Path.LocalPath);
             AddPathToList(_folderList, _selectedFolderPath);
-            UpdateListBox(_folderListBox, _folderList);
+            WindowHelpers.UpdateListBox(_folderListBox, _folderList);
             _config.SaveToConfigFile("paths", "folderList", _folderList.ToArray());
         }
         else
@@ -90,7 +90,7 @@ public partial class MainWindow : Window
         {
             _selectedFilePath = new FileInfo(fileResult[0].Path.LocalPath);
             AddPathToList(_fileList, _selectedFilePath);
-            UpdateListBox(_fileListBox, _fileList);
+            WindowHelpers.UpdateListBox(_fileListBox, _fileList);
             _config.SaveToConfigFile("paths", "fileList", _fileList.ToArray());
         }
         else
@@ -137,7 +137,7 @@ public partial class MainWindow : Window
                 {
                     Directory.CreateDirectory(destinationFolderPath);
                 }
-                CopyDirectoryContents(folder, destinationFolderPath);
+                FileUtils.CopyDirectoryContents(folder, destinationFolderPath);
             }
 
             foreach (var file in _fileList)
@@ -155,83 +155,6 @@ public partial class MainWindow : Window
         catch (Exception exc)
         {
             Console.WriteLine("Error during backup: " + exc.Message);
-        }
-    }
-
-    private static void CopyDirectoryContents(DirectoryInfo sourceDir, string targetDir)
-    {
-        if (!sourceDir.Exists)
-        {
-            throw new DirectoryNotFoundException("Source directory does not exist or could not be found: " + sourceDir);
-        }
-
-        if (!Directory.Exists(targetDir))
-        {
-            Directory.CreateDirectory(targetDir);
-        }
-
-        foreach (var file in sourceDir.GetFiles())
-        {
-            var tempPath = Path.Combine(targetDir, file.Name);
-            if (!File.Exists(tempPath))
-            {
-                file.CopyTo(tempPath, false);
-                Console.WriteLine($"File '{file.Name}' copied to '{tempPath}'.");
-            }
-            else
-            {
-                var sourceBytes = File.ReadAllBytes(file.FullName);
-                var destinationBytes = File.ReadAllBytes(tempPath);
-
-                if (ByteArraysAreEqual(sourceBytes, destinationBytes))
-                {
-                    Console.WriteLine($"File '{file.Name}' already exists in destination and is identical. Skipping.");
-                }
-                else
-                {
-                    RenameFile(tempPath);
-                    file.CopyTo(tempPath, false);
-                    Console.WriteLine($"File '{file.Name}' copied to '{tempPath}' after renaming existing file.");
-                }
-
-            }
-        }
-
-        foreach (var subDir in sourceDir.GetDirectories())
-        {
-            var tempPath = Path.Combine(targetDir, subDir.Name);
-            CopyDirectoryContents(subDir, tempPath);
-        }
-    }
-
-    private static bool ByteArraysAreEqual(byte[] array1, byte[] array2)
-    {
-        if (array1.Length != array2.Length)
-            return false;
-
-        return !array1.Where((t, i) => t != array2[i]).Any();
-    }
-
-    private static void RenameFile(string filePath)
-    {
-        var fileName = Path.GetFileNameWithoutExtension(filePath);
-        var fileExtension = Path.GetExtension(filePath);
-        var directory = Path.GetDirectoryName(filePath)!;
-
-        var newFileName = $"{fileName}_{DateTime.Now:yyyy-MM-dd_HH-mm}{fileExtension}";
-        var newFilePath = Path.Combine(directory, newFileName);
-
-        File.Move(filePath, newFilePath);
-        Console.WriteLine($"File '{Path.GetFileName(filePath)}' renamed to '{Path.GetFileName(newFilePath)}'.");
-    }
-
-    private static void UpdateListBox<T>(ListBox? listBox, List<T> list)
-    {
-        if (listBox == null) return;
-        listBox.Items.Clear();
-        foreach (var item in list)
-        {
-            listBox.Items.Add(item);
         }
     }
 

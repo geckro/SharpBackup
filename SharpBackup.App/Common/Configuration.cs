@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Xml;
 
-namespace SharpBackup.App;
+namespace SharpBackup.App.Common;
 
 public class Configuration
 {
@@ -80,7 +80,7 @@ public class Configuration
             }
 
             var root = xmlDoc.DocumentElement ?? xmlDoc.AppendChild(xmlDoc.CreateElement("Configuration"));
-            var configNode = root?.SelectSingleNode(xmlCategory) ?? root.AppendChild(xmlDoc.CreateElement(xmlCategory));
+            var configNode = root?.SelectSingleNode(xmlCategory) ?? root!.AppendChild(xmlDoc.CreateElement(xmlCategory));
 
             var existingKeyNode = configNode?.SelectSingleNode(xmlKey);
             if (existingKeyNode != null)
