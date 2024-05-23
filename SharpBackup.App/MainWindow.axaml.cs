@@ -43,15 +43,15 @@ public partial class MainWindow : Window
     {
         _backupPathBox!.Text = _config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup";
 
-        var folderPaths = _config.GetConfigValueRange("paths", "folderList") ?? [];
-        foreach (var path in folderPaths)
+        string[] folderPaths = _config.GetConfigValueRange("paths", "folderList") ?? [];
+        foreach (string path in folderPaths)
         {
             _folderList.Add(new DirectoryInfo(path));
         }
         WindowHelpers.UpdateListBox(_folderListBox, _folderList);
 
-        var filePaths = _config.GetConfigValueRange("paths", "fileList") ?? [];
-        foreach (var path in filePaths)
+        string[] filePaths = _config.GetConfigValueRange("paths", "fileList") ?? [];
+        foreach (string path in filePaths)
         {
             _fileList.Add(new FileInfo(path));
         }
@@ -122,7 +122,7 @@ public partial class MainWindow : Window
 
     private void OnBackupClick(object sender, RoutedEventArgs e)
     {
-        var backupDirectory = new DirectoryInfo(_config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup");
+        DirectoryInfo backupDirectory = new(_config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup");
 
         if (!backupDirectory.Exists)
         {
@@ -133,7 +133,7 @@ public partial class MainWindow : Window
         {
             foreach (var folder in _folderList)
             {
-                var destinationFolderPath = Path.Combine(backupDirectory.FullName, folder.Name);
+                string destinationFolderPath = Path.Combine(backupDirectory.FullName, folder.Name);
                 if (!Directory.Exists(destinationFolderPath))
                 {
                     Directory.CreateDirectory(destinationFolderPath);
@@ -141,13 +141,13 @@ public partial class MainWindow : Window
                 FileUtils.CopyDirectoryContents(folder, destinationFolderPath);
             }
 
-            foreach (var file in _fileList)
+            foreach (FileInfo file in _fileList)
             {
-                var destinationFilePath = Path.Combine(backupDirectory.FullName, file.Name);
+                string destinationFilePath = Path.Combine(backupDirectory.FullName, file.Name);
                 file.CopyTo(destinationFilePath, true);
             }
 
-            var infoWindow = new InfoWindow
+            InfoWindow infoWindow = new()
             {
                 InfoText = "Backup completed with no errors."
             };

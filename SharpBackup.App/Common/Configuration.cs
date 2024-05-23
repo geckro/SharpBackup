@@ -12,7 +12,7 @@ public class Configuration
     {
         try
         {
-            var xmlDoc = new XmlDocument();
+            XmlDocument xmlDoc = new();
             XmlElement root = xmlDoc.CreateElement("Configuration");
             xmlDoc.AppendChild(root);
 
@@ -35,7 +35,7 @@ public class Configuration
                 return default;
             }
 
-            var xmlDoc = new XmlDocument();
+            XmlDocument xmlDoc = new();
             xmlDoc.Load(_configFilePath.FullName);
 
             XmlNode? configNode = xmlDoc.SelectSingleNode($"/Configuration/{xmlCategory}/{xmlKey}");
@@ -67,7 +67,7 @@ public class Configuration
     {
         try
         {
-            var xmlDoc = new XmlDocument();
+            XmlDocument xmlDoc = new();
 
             if (!File.Exists(_configFilePath.FullName))
             {
@@ -79,16 +79,16 @@ public class Configuration
                 xmlDoc.Load(_configFilePath.FullName);
             }
 
-            var root = xmlDoc.DocumentElement ?? xmlDoc.AppendChild(xmlDoc.CreateElement("Configuration"));
-            var configNode = root?.SelectSingleNode(xmlCategory) ?? root!.AppendChild(xmlDoc.CreateElement(xmlCategory));
+            XmlNode? root = xmlDoc.DocumentElement ?? xmlDoc.AppendChild(xmlDoc.CreateElement("Configuration"));
+            XmlNode? configNode = root?.SelectSingleNode(xmlCategory) ?? root!.AppendChild(xmlDoc.CreateElement(xmlCategory));
 
-            var existingKeyNode = configNode?.SelectSingleNode(xmlKey);
+            XmlNode? existingKeyNode = configNode?.SelectSingleNode(xmlKey);
             if (existingKeyNode != null)
             {
                 configNode?.RemoveChild(existingKeyNode);
             }
 
-            var keyElement = xmlDoc.CreateElement(xmlKey);
+            XmlElement keyElement = xmlDoc.CreateElement(xmlKey);
             if (value is string stringValue)
             {
                 keyElement.InnerText = stringValue;
