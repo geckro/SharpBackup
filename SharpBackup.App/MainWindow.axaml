@@ -12,11 +12,11 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal">
             <StackPanel Orientation="Vertical" MinWidth="200">
-                <Label Content="Folder Locations" HorizontalAlignment="Center"></Label>
+                <Label Content="Folder Locations" Name="FolderLocationLabel" HorizontalAlignment="Center"></Label>
                 <ListBox Name="FolderListBox" MaxWidth="290"></ListBox>
             </StackPanel>
             <StackPanel Orientation="Vertical" MinWidth="200">
-                <Label Content="File Locations" HorizontalAlignment="Center"></Label>
+                <Label Content="File Locations" Name="FileLocationLabel" HorizontalAlignment="Center"></Label>
                 <ListBox Name="FileListBox" MaxWidth="290"></ListBox>
             </StackPanel>
 

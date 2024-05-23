@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private readonly TextBox? _backupPathBox;
 
     private readonly ListBox? _folderListBox, _fileListBox;
+    private readonly Label? _folderLocationLabel, _fileLocationLabel;
 
     private readonly Configuration _config = new();
 
@@ -32,9 +33,11 @@ public partial class MainWindow : Window
         _folderListBox = this.FindControl<ListBox>("FolderListBox");
         _fileListBox = this.FindControl<ListBox>("FileListBox");
         _backupPathBox = this.FindControl<TextBox>("BackupLocationOption");
+        _folderLocationLabel = this.FindControl<Label>("FolderLocationLabel");
+        _fileLocationLabel = this.FindControl<Label>("FileLocationLabel");
 
-        if (_folderListBox != null) ScrollViewer.SetHorizontalScrollBarVisibility(_folderListBox, ScrollBarVisibility.Auto);
-        if (_fileListBox != null) ScrollViewer.SetHorizontalScrollBarVisibility(_fileListBox, ScrollBarVisibility.Auto);
+        UpdateLabelVisibility(_folderListBox, _folderLocationLabel);
+        UpdateLabelVisibility(_fileListBox, _fileLocationLabel);
 
         ApplyConfigurations();
     }
@@ -71,6 +74,7 @@ public partial class MainWindow : Window
             _selectedFolderPath = new DirectoryInfo(folderResult[0].Path.LocalPath);
             _folderList.Add(_selectedFolderPath);
             WindowHelpers.UpdateListBox(_folderListBox, _folderList);
+            UpdateLabelVisibility(_folderListBox, _folderLocationLabel);
             _config.SaveToConfigFile("paths", "folderList", _folderList.ToArray());
         }
         else
@@ -92,6 +96,7 @@ public partial class MainWindow : Window
             _selectedFilePath = new FileInfo(fileResult[0].Path.LocalPath);
             _fileList.Add(_selectedFilePath);
             WindowHelpers.UpdateListBox(_fileListBox, _fileList);
+            UpdateLabelVisibility(_fileListBox, _fileLocationLabel);
             _config.SaveToConfigFile("paths", "fileList", _fileList.ToArray());
         }
         else
@@ -156,6 +161,21 @@ public partial class MainWindow : Window
         catch (Exception exc)
         {
             Console.WriteLine("Error during backup: " + exc.Message);
+        }
+    }
+
+    private static void UpdateLabelVisibility(ListBox? listBox, Label? label)
+    {
+        if (listBox == null || label == null) return;
+
+        if (listBox.Items.Count == 0)
+        {
+            label.IsVisible = false;
+        }
+        else
+        {
+            label.IsVisible = true;
+            ScrollViewer.SetHorizontalScrollBarVisibility(listBox, ScrollBarVisibility.Auto);
         }
     }
 }
