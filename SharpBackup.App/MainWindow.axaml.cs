@@ -41,16 +41,16 @@ public partial class MainWindow : Window
 
     private void ApplyConfigurations()
     {
-        _backupPathBox!.Text = _config.GetConfigValue<string>("backup", "backupFolder") ?? @"C:\Backup";
+        _backupPathBox!.Text = _config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup";
 
-        var folderPaths = _config.GetConfigValue<string[]>("paths", "folderList") ?? [];
+        var folderPaths = _config.GetConfigValueRange("paths", "folderList") ?? [];
         foreach (var path in folderPaths)
         {
             _folderList.Add(new DirectoryInfo(path));
         }
         WindowHelpers.UpdateListBox(_folderListBox, _folderList);
 
-        var filePaths = _config.GetConfigValue<string[]>("paths", "fileList") ?? [];
+        var filePaths = _config.GetConfigValueRange("paths", "fileList") ?? [];
         foreach (var path in filePaths)
         {
             _fileList.Add(new FileInfo(path));
@@ -122,7 +122,7 @@ public partial class MainWindow : Window
 
     private void OnBackupClick(object sender, RoutedEventArgs e)
     {
-        var backupDirectory = new DirectoryInfo(_config.GetConfigValue<string>("backup", "backupFolder") ?? @"C:\Backup");
+        var backupDirectory = new DirectoryInfo(_config.GetConfigValueString("backup", "backupFolder") ?? @"C:\Backup");
 
         if (!backupDirectory.Exists)
         {

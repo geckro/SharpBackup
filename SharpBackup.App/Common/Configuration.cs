@@ -26,7 +26,7 @@ public class Configuration
         }
     }
 
-    public T? GetConfigValue<T>(string xmlCategory, string xmlKey)
+    public XmlNode? GetConfigValue(string xmlCategory, string xmlKey)
     {
         try
         {
@@ -44,23 +44,23 @@ public class Configuration
                 return default;
             }
 
-            if (typeof(T) == typeof(string))
-            {
-                return (T)(object)configNode.InnerText;
-            }
-
-            if (typeof(T) == typeof(string[]))
-            {
-                return (T)(object)configNode.InnerText.Split(';', options: StringSplitOptions.RemoveEmptyEntries);
-            }
-
-            throw new InvalidOperationException($"Unsupported type: {typeof(T)}");
+            return configNode;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error getting config value: {ex.Message}");
             return default;
         }
+    }
+
+    public string[]? GetConfigValueRange(string xmlCategory, string xmlKey)
+    {
+        return GetConfigValue(xmlCategory, xmlKey)?.InnerText.Split(';', StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    public string? GetConfigValueString(string xmlCategory, string xmlKey)
+    {
+        return GetConfigValue(xmlCategory, xmlKey)?.InnerText;
     }
 
     public void SaveToConfigFile(string xmlCategory, string xmlKey, object value)
